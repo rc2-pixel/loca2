@@ -16,12 +16,13 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Gradle Wrapperをインストール
-        run: |
-          wget https://services.gradle.org/distributions/gradle-8.2-bin.zip -q
-          unzip -q gradle-8.2-bin.zip
-          ./gradle-8.2/bin/gradle wrapper --gradle-version 8.2
-          chmod +x gradlew
+      - name: Gradleをインストール
+        uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-version: '8.2'
+
+      - name: gradle wrapperを生成
+        run: gradle wrapper --gradle-version 8.2 --distribution-type bin
 
       - name: Debug APKをビルド
         run: ./gradlew assembleDebug

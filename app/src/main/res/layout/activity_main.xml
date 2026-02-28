@@ -43,6 +43,16 @@
         android:textSize="13sp"
         android:textColor="#888888"
         android:gravity="center"
+        android:layout_marginBottom="4dp" />
+
+    <TextView
+        android:id="@+id/tvAltitude"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text=""
+        android:textSize="13sp"
+        android:textColor="#888888"
+        android:gravity="center"
         android:layout_marginBottom="24dp" />
 
     <Button

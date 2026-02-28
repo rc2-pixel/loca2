@@ -12,6 +12,9 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.google.android.gms.location.*
+import kotlinx.coroutines.*
+import org.json.JSONObject
+import java.net.URL
 import java.util.Locale
 
 class MainActivity : AppCompatActivity() {
@@ -21,6 +24,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var tvLatLng: TextView
     private lateinit var tvAltitude: TextView
     private lateinit var btnRefresh: Button
+    private val scope = CoroutineScope(Dispatchers.Main + Job())
 
     companion object {
         private const val PERMISSION_REQUEST_CODE = 1001
@@ -70,7 +74,7 @@ class MainActivity : AppCompatActivity() {
     private fun getCurrentLocation() {
         tvAddress.text = "位置情報を取得中..."
         tvLatLng.text = ""
-        tvAltitude.text = ""
+        tvAltitude.text = "標高を取得中..."
 
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
             != PackageManager.PERMISSION_GRANTED &&
@@ -86,15 +90,32 @@ class MainActivity : AppCompatActivity() {
             if (location != null) {
                 val lat = location.latitude
                 val lng = location.longitude
-                val alt = location.altitude
                 tvLatLng.text = "緯度: %.6f　経度: %.6f".format(lat, lng)
-                tvAltitude.text = "標高: %.1f m".format(alt)
                 getAddressFromLocation(lat, lng)
+                getAltitudeFromGSI(lat, lng)
             } else {
                 tvAddress.text = "位置情報を取得できませんでした\nGPSを有効にしてください"
+                tvAltitude.text = ""
             }
         }.addOnFailureListener {
             tvAddress.text = "エラーが発生しました: ${it.message}"
+            tvAltitude.text = ""
+        }
+    }
+
+    private fun getAltitudeFromGSI(lat: Double, lng: Double) {
+        scope.launch {
+            try {
+                val altitude = withContext(Dispatchers.IO) {
+                    val url = "https://cyberjapandata2.gsi.go.jp/general/dem/scripts/getelevation.php?lon=$lng&lat=$lat&outtype=JSON"
+                    val response = URL(url).readText()
+                    val json = JSONObject(response)
+                    json.getDouble("elevation")
+                }
+                tvAltitude.text = "標高: %.1f m（国土地理院）".format(altitude)
+            } catch (e: Exception) {
+                tvAltitude.text = "標高を取得できませんでした"
+            }
         }
     }
 
@@ -124,6 +145,11 @@ class MainActivity : AppCompatActivity() {
         } catch (e: Exception) {
             tvAddress.text = "住所の取得に失敗しました"
         }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        scope.cancel()
     }
 
     override fun onRequestPermissionsResult(

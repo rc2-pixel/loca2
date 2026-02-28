@@ -19,6 +19,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private lateinit var tvAddress: TextView
     private lateinit var tvLatLng: TextView
+    private lateinit var tvAltitude: TextView
     private lateinit var btnRefresh: Button
 
     companion object {
@@ -31,6 +32,7 @@ class MainActivity : AppCompatActivity() {
 
         tvAddress = findViewById(R.id.tvAddress)
         tvLatLng = findViewById(R.id.tvLatLng)
+        tvAltitude = findViewById(R.id.tvAltitude)
         btnRefresh = findViewById(R.id.btnRefresh)
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
@@ -68,6 +70,7 @@ class MainActivity : AppCompatActivity() {
     private fun getCurrentLocation() {
         tvAddress.text = "位置情報を取得中..."
         tvLatLng.text = ""
+        tvAltitude.text = ""
 
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
             != PackageManager.PERMISSION_GRANTED &&
@@ -83,7 +86,9 @@ class MainActivity : AppCompatActivity() {
             if (location != null) {
                 val lat = location.latitude
                 val lng = location.longitude
+                val alt = location.altitude
                 tvLatLng.text = "緯度: %.6f　経度: %.6f".format(lat, lng)
+                tvAltitude.text = "標高: %.1f m".format(alt)
                 getAddressFromLocation(lat, lng)
             } else {
                 tvAddress.text = "位置情報を取得できませんでした\nGPSを有効にしてください"
@@ -100,11 +105,11 @@ class MainActivity : AppCompatActivity() {
             if (!addresses.isNullOrEmpty()) {
                 val address = addresses[0]
                 val parts = listOf(
-                    address.adminArea,       // 都道府県
-                    address.locality,        // 市区町村
-                    address.subLocality,     // 地区
-                    address.thoroughfare,    // 通り
-                    address.subThoroughfare  // 番地
+                    address.adminArea,
+                    address.locality,
+                    address.subLocality,
+                    address.thoroughfare,
+                    address.subThoroughfare
                 ).filterNotNull()
 
                 val addressText = if (parts.isNotEmpty()) {
@@ -114,10 +119,10 @@ class MainActivity : AppCompatActivity() {
                 }
                 tvAddress.text = addressText
             } else {
-                tvAddress.text = "住所が見つかりませんでした\n緯度: %.6f\n経度: %.6f".format(lat, lng)
+                tvAddress.text = "住所が見つかりませんでした"
             }
         } catch (e: Exception) {
-            tvAddress.text = "住所の取得に失敗しました\n緯度: %.6f\n経度: %.6f".format(lat, lng)
+            tvAddress.text = "住所の取得に失敗しました"
         }
     }
 
@@ -133,7 +138,7 @@ class MainActivity : AppCompatActivity() {
                 getCurrentLocation()
             } else {
                 Toast.makeText(this, "位置情報の許可が必要です", Toast.LENGTH_LONG).show()
-                tvAddress.text = "位置情報の許可が必要です\n設定から許可してください"
+                tvAddress.text = "位置情報の許可が必要です"
             }
         }
     }
